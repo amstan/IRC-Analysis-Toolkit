@@ -1,2 +1,2 @@
 ## Requirements
-* http://pywebgraph.sourceforge.net/
+* http://networkx.lanl.gov/pygraphviz/
