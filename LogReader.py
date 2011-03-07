@@ -16,7 +16,7 @@ class LogReader:
 				for line in f.readlines():
 					yield line[:-1]
 
-if __name__="__main__":
+if __name__=="__main__":
 	reader=LogReader("logs/*")
 	
 	for line in reader:
