@@ -46,8 +46,8 @@ def main():
 	nickre = re.compile("\\b(%s)*\\b" % ("|".join(re.escape(nick.lower()) for nick in nicks)))
 	
 	#Do some tests for the match
-	print nickre.match("xenon: amstan: test").groups()
-	print nickre.match("gfdsgsjhsdfrwagh").groups()
+	print nickre.match("antimatroid: amstan: test").groups() #should return ("antimatriod","amstan")
+	print nickre.match("gfdsgsjhsdfrwagh").groups() #should return none
 	
 	#for line in log[:0]:
 		#print line
