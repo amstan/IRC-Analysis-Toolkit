@@ -22,7 +22,6 @@ def toLower(s, casemapping=None):
 		raise ValueError, 'Invalid casemapping: %r' % casemapping
 
 def parseLog(reader):
-	
 	log = []
 	nicks = set()
 
@@ -50,7 +49,7 @@ def parseLog(reader):
 	
 	return log, nicks
 
-def generateGraph(layout,filelist):
+def generateGraph(layout,filelist,outputimage):
 	reader=LogReader(filelist)
 	
 	log, nicks = parseLog(reader)
@@ -93,8 +92,8 @@ def generateGraph(layout,filelist):
 			G.add_edge(nick,highlight)
 	
 	G.layout(prog=layout)
-	G.draw('graph.jpg')
+	G.draw(outputimage)
 	print "Done"
 
 if __name__ == "__main__":
-	generateGraph(sys.argv[1],sys.argv[2:])
+	generateGraph(sys.argv[1],sys.argv[2:],"graph.svg")
