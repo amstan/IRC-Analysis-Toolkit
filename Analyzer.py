@@ -22,8 +22,9 @@ def parseLog(reader):
 			nick, msg = msg.split(' ',1)
 		else:
 			linetype = MSG
-			nick = nick[1:-1].rstrip("_")
+			nick = nick[1:-1]
 		
+		nick=nick.rstrip("_")
 		nicks.add(nick)
 		log.append([linetype,date,nick,msg])
 		
@@ -43,22 +44,20 @@ def main():
 	
 	print "Nicks: %s" % (", ".join(nicks))
 	
-	nickre = re.compile("\\b(%s)*\\b" % ("|".join(re.escape(nick.lower()) for nick in nicks)))
+	nickre = re.compile("\\b(%s)\\b" % ("|".join(re.escape(nick.lower()) for nick in nicks)))
 	
-	#Do some tests for the match
-	print nickre.match("antimatroid: amstan: test").groups() #should return ("antimatriod","amstan")
-	print nickre.match("gfdsgsjhsdfrwagh").groups() #should return none
-	
-	#for line in log[:0]:
-		#print line
-		#linetype, date, nick, msg = line
-		#if linetype == MSG:
-			#line=line.lower()
-			#if msg.find(possiblenick)!=-1:
-				#print possiblenick
-		
-		#print "Searching for edges @ %s" % (date)
-		#sys.stdout.flush()
+	try:
+		for line in log:
+			linetype, date, nick, msg = line
+			
+			print "Searching for edges @ %s" % (date)
+			sys.stdout.flush()
+			
+			if linetype==MSG:
+				highlights=set(match.group(1) for match in nickre.finditer(msg.lower()))
+				graph[nick]|=highlights
+	except KeyboardInterrupt:
+		print graph["amstan"]
 
 if __name__ == "__main__":
 	main()
