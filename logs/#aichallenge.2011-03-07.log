@@ -1,0 +1,590 @@
+2011-03-07T00:00:07  <janzert> do you have bss03's latest version of the matchmaking page open?
+2011-03-07T00:00:10  *** davidjliu <davidjliu!473a6d0e@gateway/web/freenode/ip.71.58.109.14> has quit IRC (Quit: Page closed)
+2011-03-07T00:00:17  <McLeopold> no
+2011-03-07T00:01:19  <McLeopold> I don't like the "at random" part.
+2011-03-07T00:01:25  <janzert> I really don't want to disqualify any submissions after they've entered the contest unless they are causing actual problems with the servers
+2011-03-07T00:01:34  <McLeopold> You don't really do that in sql with any effeciency.
+2011-03-07T00:02:45  <McLeopold> it's kinda wordy...
+2011-03-07T00:02:53  <janzert> since it's only used to break ties getting rid of it shouldn't be effect much
+2011-03-07T00:03:11  <janzert> anyway in the future section
+2011-03-07T00:03:13  <McLeopold> where do you see disqualify?
+2011-03-07T00:03:31  <janzert> it's not in the page anymore
+2011-03-07T00:03:44  <janzert> I noticed it in your old page
+2011-03-07T00:03:47  <janzert> but anyway
+2011-03-07T00:04:05  <McLeopold> that was probably the "functional test game"
+2011-03-07T00:04:14  <janzert> in the future section I'd like to get rid of the first choice for seed the seed player
+2011-03-07T00:04:15  <McLeopold> I just didn't explain it well.
+2011-03-07T00:04:41  <janzert> so the seed is always based on user not submission basically
+2011-03-07T00:05:19  <McLeopold> new submission should come first, the cooldown prevents spamming
+2011-03-07T00:05:20  <janzert> then you don't need to worry about a pairing/resubmission cooldown at all and spamming submissions doesn't give you any value
+2011-03-07T00:05:55  <janzert> any cooldown shorter than the time to play your next match gives you an incentive to spam
+2011-03-07T00:06:02  <McLeopold> true...
+2011-03-07T00:06:19  <janzert> at which point just go by player instead of submission and be done with it
+2011-03-07T00:07:07  <bss03-AFK> The "at random" just means I take the first row the DB outputs.
+2011-03-07T00:07:14  <bss03-AFK> That why it is "random".
+2011-03-07T00:07:23  <McLeopold> put in an order by and define the criteria
+2011-03-07T00:07:33  <amstan> bss03-AFK: ugh.. stop using afk nicks.. irc has /away
+2011-03-07T00:07:39  <McLeopold> (which is submission_id, aka timestamp)
+2011-03-07T00:07:49  <bss03-AFK> I use the timestamp.
+2011-03-07T00:07:53  <McLeopold> nothing happend
+2011-03-07T00:08:07  <bss03-AFK> That en I say, If there are ties (unlikely) I take whatever the DB gives first.
+2011-03-07T00:08:12  *** bss03-AFK is now known as bss03
+2011-03-07T00:08:35  <McLeopold> you can't have a tie with a unique id
+2011-03-07T00:09:39  <bss03> I don't think we actually want to prefer thier earlier or later submissions, so I'm hesitant to order by submission_id.
+2011-03-07T00:10:06  <McLeopold> a single users earlier/later?
+2011-03-07T00:10:18  <McLeopold> or the set of all new submissions?
+2011-03-07T00:10:31  <bss03> There's no going to be a lot of ties that are resolved at "random" anyway.  Usually my last comparision is either a timestamp or a trueskill match quality.
+2011-03-07T00:11:01  <McLeopold> don't use timestamp, use unique ids
+2011-03-07T00:11:06  <bss03> Set of all submissions.  Of course we only want to use the latest submission for most stuff.
+2011-03-07T00:12:09  <janzert> where are you using a timestamp that submission_id wouldn't give the same ordering (except in the case of a tie for the timestamp of course)?
+2011-03-07T00:12:26  <bss03> Comparing timestamps is virtually required.
+2011-03-07T00:12:37  <bss03> Would you rather I went by game_id?
+2011-03-07T00:12:40  <McLeopold> yes
+2011-03-07T00:12:50  <McLeopold> unique_id's are in order of time anyway
+2011-03-07T00:12:57  <McLeopold> and integers are faster
+2011-03-07T00:13:14  <McLeopold> I don't want to index timestamps
+2011-03-07T00:13:42  <bss03> Well, unique id aren't guaranteed to increase monotonically as time does.
+2011-03-07T00:13:51  <McLeopold> btw, I glad you've been putting in the work you have, it is looking good so far.
+2011-03-07T00:14:02  <bss03> But, I'm not gonna fight on that point.  game_id or somesuch is fine.
+2011-03-07T00:14:45  <McLeopold> I think they are, if I know what monotonically means.
+2011-03-07T00:14:53  <McLeopold> you always count up
+2011-03-07T00:15:06  <bss03> Now, I really must get to bed.  "Wake up call" in 7 hours.
+2011-03-07T00:15:25  <McLeopold> k, cya
+2011-03-07T00:15:27  <bss03> RDBMSes are allowed to re-use unique ids that are not longer in the table.
+2011-03-07T00:15:29  <janzert> I think they're a reason they're also called autoincrement
+2011-03-07T00:15:39  <McLeopold> we won't be doing that
+2011-03-07T00:15:41  <bss03> Most don't.
+2011-03-07T00:15:44  <janzert> there's
+2011-03-07T00:16:05  <McLeopold> the mysql auto_inc does a max() on the table
+2011-03-07T00:16:20  <bss03> MySQL autoincrement in particular doesn't -- it just does max() + 1.
+2011-03-07T00:17:02  <janzert> which is exactly what we need to guarantee right?
+2011-03-07T00:17:10  <McLeopold> yes, so id's will work
+2011-03-07T00:17:36  <bss03> Yeah, game_id will work fine.  I'm a theoretical purest though.
+2011-03-07T00:17:44  <bss03> Why do you think I learned Haskell? ;)
+2011-03-07T00:17:50  <McLeopold> :)
+2011-03-07T00:17:51  <bss03> Night all.
+2011-03-07T00:17:54  <McLeopold> night
+2011-03-07T00:17:56  <janzert> :)
+2011-03-07T00:17:58  <janzert> goodnight
+2011-03-07T00:18:03  <janzert> again :P
+2011-03-07T00:20:59  <janzert> so the main server setup script minimally works installing stuff and setting up apache to serve up pages
+2011-03-07T00:21:37  <janzert> but I'm going to wait to add anything about setting up cron jobs until the new scripts are done since it appears they are all changing names anyway
+2011-03-07T00:22:32  <janzert> so now I just need to give it a good dose of flexibility :P
+2011-03-07T00:24:29  <McLeopold> we still using compile_anything?
+2011-03-07T00:24:56  <janzert> on the main server? depends on what you mean by still
+2011-03-07T00:25:08  <McLeopold> can markdown blocks be given a language syntax for highlighting?
+2011-03-07T00:25:15  <McLeopold> for the workers to compile
+2011-03-07T00:25:21  <janzert> it was in planetwars, once compilation is moved to the workers no
+2011-03-07T00:25:29  <janzert> yes, I believe so
+2011-03-07T00:26:18  <janzert> or it will for sure once the workers do compilation unless we want to fully jump ship and just use compile.sh/run.sh scripts for all submissions
+2011-03-07T00:26:44  <janzert> I'm not quite sure whether I'm ready or not to go that far
+2011-03-07T00:27:29  <McLeopold> let's assume no compile.sh for now
+2011-03-07T00:29:25  <janzert> yeah, then the worker will need compile_anything
+2011-03-07T00:31:01  <janzert> are you ok with simply choosing seed players in least recently played order?
+2011-03-07T00:31:04  *** _flag <_flag!~flag@69-165-173-172.dsl.teksavvy.com> has quit IRC (Quit: Lost terminal)
+2011-03-07T00:31:23  * janzert is editing the wiki page
+2011-03-07T00:32:30  <McLeopold> janzert: yes for seed players, based on user_id only, meaning no cool down
+2011-03-07T00:32:57  <janzert> s/user_id/game_id ?
+2011-03-07T00:33:07  <McLeopold> I would like to try and give players not spamming some leeway, but we can do that later.
+2011-03-07T00:33:45  <McLeopold> oh no, but yes
+2011-03-07T00:34:19  <McLeopold> get the game_id's per user, then select the seed player lowest game_id, nulls being lowest
+2011-03-07T00:35:03  <janzert> so "Choose the player with the minimal maximum game_id (nulls being lowest)" :)
+2011-03-07T00:35:16  <janzert> although I'm not sure that's the best way to put it on that page
+2011-03-07T00:35:34  <McLeopold> yah
+2011-03-07T00:35:48  <McLeopold> btw, we need to add scotland as a country :)
+2011-03-07T00:36:32  * janzert will take no responsibility for countries included or excluded from the countries list :P
+2011-03-07T00:36:52  <McLeopold> and that fake country where anyone from the internet can be a citizen
+2011-03-07T00:37:01  <McLeopold> I can't remember the name...
+2011-03-07T00:38:43  <McLeopold> http://en.wikipedia.org/wiki/Principality_of_Sealand
+2011-03-07T00:38:58  <McLeopold> that's not the one I was thinking of, but them too :)
+2011-03-07T00:39:17  <janzert> didn't that burn a few years back
+2011-03-07T00:39:40  <janzert> ahh, yes in 2006
+2011-03-07T00:45:07  <McLeopold> http://en.wikipedia.org/wiki/Talossa
+2011-03-07T00:45:09  <McLeopold> there we go
+2011-03-07T00:48:15  *** Palmik <Palmik!~Palmik@palmikpc.sks6.muni.cz> has joined #aichallenge
+2011-03-07T00:50:02  *** delt0r___ <delt0r___!~delt0r@188-22-166-131.adsl.highway.telekom.at> has joined #aichallenge
+2011-03-07T00:51:14  *** delt0r_ <delt0r_!~delt0r@188-22-160-19.adsl.highway.telekom.at> has quit IRC (Ping timeout: 246 seconds)
+2011-03-07T00:53:28  *** McLeopold <McLeopold!~Scott@c-98-247-248-39.hsd1.wa.comcast.net> has left #aichallenge
+2011-03-07T01:00:46  *** McLeopold <McLeopold!~Scott@c-98-247-248-39.hsd1.wa.comcast.net> has joined #aichallenge
+2011-03-07T01:37:54  *** sigh <sigh!~sigh@lithium.mailguard.com.au> has quit IRC (Ping timeout: 276 seconds)
+2011-03-07T01:47:45  *** Cyndre__ <Cyndre__!~Cyndre@DOCSIS-181-75.cable-lynx.net> has joined #aichallenge
+2011-03-07T01:50:24  <McLeopold> janzert: do you know if the main server was using php as a module?
+2011-03-07T01:52:45  *** computerwiz_222 <computerwiz_222!~andrew@174-138-221-195.cpe.distributel.net> has joined #aichallenge
+2011-03-07T01:53:09  <janzert> not offhand
+2011-03-07T01:55:24  <McLeopold> I'm seeing the lack of persistent database connections
+2011-03-07T01:55:40  *** Cyndre_ <Cyndre_!~Cyndre@DOCSIS-181-75.cable-lynx.net> has quit IRC (*.net *.split)
+2011-03-07T01:55:41  *** sketchyd_ <sketchyd_!~djtumolo@pool-108-35-34-238.nwrknj.fios.verizon.net> has quit IRC (*.net *.split)
+2011-03-07T01:55:41  *** computer1iz_222 <computer1iz_222!~andrew@174-138-221-195.cpe.distributel.net> has quit IRC (*.net *.split)
+2011-03-07T01:55:43  *** Zannick <Zannick!jokeserver@MAXIMEGALON.ANDREW.CMU.EDU> has quit IRC (*.net *.split)
+2011-03-07T01:55:46  *** sketchyd_ <sketchyd_!~djtumolo@pool-108-35-34-238.nwrknj.fios.verizon.net> has joined #aichallenge
+2011-03-07T01:58:26  *** Zannick <Zannick!jokeserver@MAXIMEGALON.ANDREW.CMU.EDU> has joined #aichallenge
+2011-03-07T01:58:38  <janzert> ok, looks like mod_php5 is indeed being used
+2011-03-07T01:59:02  <McLeopold> wow, was it really run without sql connection pooling?
+2011-03-07T02:00:27  <janzert> so far as I see it has no configuration beyond specifying it's used for the php files
+2011-03-07T02:00:42  *** ZanniqlcKzxkq <ZanniqlcKzxkq!jokeserver@MAXIMEGALON.ANDREW.CMU.EDU> has joined #aichallenge
+2011-03-07T02:00:44  *** chris___0076 <chris___0076!~Chris_007@adsl-190-53-206.asm.bellsouth.net> has joined #aichallenge
+2011-03-07T02:01:21  *** ZanniqlcKzxkq <ZanniqlcKzxkq!jokeserver@MAXIMEGALON.ANDREW.CMU.EDU> has quit IRC (Client Quit)
+2011-03-07T02:03:25  *** chris__0076 <chris__0076!~Chris_007@adsl-66-196-58.asm.bellsouth.net> has quit IRC (Ping timeout: 255 seconds)
+2011-03-07T02:03:59  <janzert> well it looks like it also has safe_mode off and open_basedir none :}
+2011-03-07T02:05:03  <McLeopold> yeah, i'm fixing safe mode off issues as well :(
+2011-03-07T02:05:18  <McLeopold> not familiar with open_basedir yet
+2011-03-07T02:05:47  <antimatroid> McLeopold: I'm unsure about your format for "space"
+2011-03-07T02:06:06  <antimatroid> you might end up with losts of (0,1,2): x, (0,2,4): x etc. situations?
+2011-03-07T02:06:18  <janzert> restricts where php scripts can open files, sort of a php specific chroot I believe
+2011-03-07T02:06:25  <janzert> none simply disables
+2011-03-07T02:08:16  <McLeopold> antimatroid: yes, there might be lots of combos
+2011-03-07T02:08:34  <antimatroid> okay, well i'll update that in a bit then make everthing functions and i think it's done
+2011-03-07T02:08:59  <McLeopold> okay, add_maps_to_database will import the function
+2011-03-07T02:09:49  <antimatroid> so could i really just throw everything i have as "main" now into a function called analyze_map?
+2011-03-07T02:09:49  <McLeopold> with the combos, I can know how much space player X can get to first, and just as fast as all others, etc.
+2011-03-07T02:10:12  <McLeopold> I can just add up the numbers I'm interested in.
+2011-03-07T02:10:24  <antimatroid> yep
+2011-03-07T02:10:43  <antimatroid> it was a little tricky working out how to calculate who can get where first, but i think what i have now is general
+2011-03-07T02:11:02  <McLeopold> I saw the pictures, they looked cool.
+2011-03-07T02:11:19  <antimatroid> actually, i need to make a couple of changes to make sure it can handle each player starting with more than one ant
+2011-03-07T02:11:23  <antimatroid> i think that's ideal?
+2011-03-07T02:11:30  <McLeopold> yes
+2011-03-07T02:11:39  <McLeopold> I hope to have multiple start maps
+2011-03-07T02:11:42  <antimatroid> they're small changes anyway, just adding a line or two in places
+2011-03-07T02:12:07  *** amstan <amstan!~amstan@69-165-150-184.dsl.teksavvy.com> has quit IRC (Ping timeout: 240 seconds)
+2011-03-07T02:14:14  *** boegel <boegel!~boegel@91.182.104.108> has joined #aichallenge
+2011-03-07T02:32:18  *** sigh <sigh!~sigh@145.115-50-210.dynamic.dsl.mel.iprimus.net.au> has joined #aichallenge
+2011-03-07T02:40:51  *** Kingpin13 <Kingpin13!~Kingpin13@Wikipedia/Kingpin13> has quit IRC (Quit: You're a kitty!)
+2011-03-07T02:49:21  <antimatroid> test = [ [3, 4], [2,5] ]
+2011-03-07T02:49:21  <antimatroid> 	if [3,_] in test:
+2011-03-07T02:49:21  <antimatroid> is there a way to do what i'm trying to do there?
+2011-03-07T03:05:30  <McLeopold> antimatroid: len([x for x in test if x[0] == 3]) > 0
+2011-03-07T03:05:48  <antimatroid> i just separated it to two different lists :P
+2011-03-07T03:07:07  <McLeopold> actually, my method sucks...
+2011-03-07T03:07:57  <McLeopold> len([x for x in test if 3 in x]) > 0
+2011-03-07T03:08:22  <McLeopold> still not that fast, but it's 1 line
+2011-03-07T03:13:31  <McLeopold> antimatroid: did you care if the 3 was first or last?
+2011-03-07T03:13:47  <antimatroid> i used something else anyway :P
+2011-03-07T03:13:51  <antimatroid> http://codepad.org/2iNmRzyX
+2011-03-07T03:14:02  <antimatroid> that's unsorted and needing of more formatting, but that's sort of what you will be getting
+2011-03-07T03:14:44  <McLeopold> so, no squares equidistant to 3 or more?
+2011-03-07T03:15:00  <antimatroid> not in that map, but it's easy to construct a situation where it will happen
+2011-03-07T03:15:13  <antimatroid> i think i could potentially get 8+ players at an equidistance
+2011-03-07T03:15:33  <antimatroid> i'm using shortest paths for players to find "access", not euclidean distance
+2011-03-07T03:16:45  <antimatroid> i should probably check that each player has the same number of starting ants and enforce that?
+2011-03-07T03:18:11  <antimatroid> boy kinder surprise toys don't require much construction these days
+2011-03-07T03:18:13  <McLeopold> just stats, no enforement
+2011-03-07T03:18:26  <antimatroid> on a better note, there are easter bunny sized kinder surprises on sale
+2011-03-07T03:18:51  <McLeopold> is that the crappy plastic toy inside of a chocolate egg?
+2011-03-07T03:18:51  <antimatroid> erm, whenever something has been wrong i've been raising a ValueError?
+2011-03-07T03:19:01  <antimatroid> yeah, but the chocolate is awesome
+2011-03-07T03:19:10  <McLeopold> the chocolate is plastic too
+2011-03-07T03:19:26  <antimatroid> can't possibly be the same
+2011-03-07T03:19:29  <McLeopold> but I still ate it
+2011-03-07T03:19:33  <antimatroid> sigh: is kinder surprise chocolate plastic?
+2011-03-07T03:19:47  <sigh> o_O
+2011-03-07T03:20:06  <McLeopold> *tastes* like plastic
+2011-03-07T03:20:25  <antimatroid> i think you tried a different toy chocolate
+2011-03-07T03:20:32  <antimatroid> kinder surprise chocolate is some of the best i know of
+2011-03-07T03:20:33  <McLeopold> it came from germany
+2011-03-07T03:20:42  <McLeopold> maybe it was old?
+2011-03-07T03:21:10  <antimatroid> this is from ferrero in australia
+2011-03-07T03:21:26  <sigh> they make nutella!
+2011-03-07T03:21:33  <antimatroid> yes, nutella is awesome
+2011-03-07T03:21:37  <antimatroid> milo is more awesome
+2011-03-07T03:21:56  <sigh> also ferrero rocher
+2011-03-07T03:21:59  <McLeopold> ValueError is the map is not valid.  Having extra starting spots can be a valid map, just unfair.
+2011-03-07T03:22:14  <antimatroid> i'm not sure whether knowing the center of a ferrero rocher makes that worse or nutella better
+2011-03-07T03:22:36  <antimatroid> McLeopold: okay, done
+2011-03-07T03:22:50  <antimatroid> center is just nutella***
+2011-03-07T03:22:57  <McLeopold> maybe a 'starts' list in the dict then
+2011-03-07T03:23:10  <antimatroid> already on it :)
+2011-03-07T03:24:44  <antimatroid> can i tell python to take two lists and sort them both but by ordering the first list?
+2011-03-07T03:25:06  <antimatroid> or have i shot myself in the foot?
+2011-03-07T03:27:39  <sigh> what do you mean?
+2011-03-07T03:29:12  <sigh> do you mean this: x,y = zip(*sorted(zip(x,y)))
+2011-03-07T03:32:25  <antimatroid> will that just sort y elements the same way it sorts x elements?
+2011-03-07T03:32:32  <sigh> yes
+2011-03-07T03:32:41  <antimatroid> i'll see how i go
+2011-03-07T03:33:52  <antimatroid> poo, didn't sort it how i wanted :(
+2011-03-07T03:34:30  <sigh> can you give an example of what you want?
+2011-03-07T03:38:32  <antimatroid> sigh: http://codepad.org/O1VS6olf
+2011-03-07T03:38:50  <antimatroid> i would want 0, 1, 2, (0,1), etc., not 0, (0,1), 1, 2 etc.
+2011-03-07T03:39:10  <antimatroid> your method worked sorry
+2011-03-07T03:39:16  <antimatroid> i was referring to the general sort :)
+2011-03-07T03:39:34  <sigh> i'm confused
+2011-03-07T03:40:09  <sigh> oh ok, you don't like how python is comparing objects
+2011-03-07T03:40:20  <antimatroid> i'm not hating this time
+2011-03-07T03:40:21  <sigh> you can pass your own compare function into sorted
+2011-03-07T03:40:37  <antimatroid> just it didn't happen to work the way that would have currently been convenient
+2011-03-07T03:41:47  <sigh> hmm... my python says that 0 < 1 < 2 < (0,1) is True
+2011-03-07T03:41:53  <sigh> which is what you said you wanted?
+2011-03-07T03:42:13  <antimatroid> hmm i just called list.sort() and got that
+2011-03-07T03:42:26  <antimatroid> oh wait
+2011-03-07T03:42:39  <antimatroid> try 1 < (0,1)?
+2011-03-07T03:42:44  <sigh> True
+2011-03-07T03:42:48  <antimatroid> nah, that should be fine, nevermind me
+2011-03-07T03:42:52  <antimatroid> hmmm
+2011-03-07T03:42:56  <sigh> ok...
+2011-03-07T03:45:49  <antimatroid> oh, i am using lists :P
+2011-03-07T03:45:55  <antimatroid> my output is using ()'s
+2011-03-07T03:46:35  <antimatroid> can i "press" a list into a tuple?
+2011-03-07T03:46:43  <sigh> press?
+2011-03-07T03:46:51  <sigh> x,y = zip(*sorted(zip(x,y)))
+2011-03-07T03:46:54  <sigh> sorry
+2011-03-07T03:47:08  <sigh> either convert x,y manually or you can x,y = map(list,zip(*sorted(zip(x,y))))
+2011-03-07T03:47:08  <antimatroid> like, make [1,2] = (1,2)
+2011-03-07T03:47:15  <sigh> list(x)
+2011-03-07T03:47:29  <McLeopold> tuple(list)
+2011-03-07T03:48:08  <sigh> i suggested just doing: x,y = list(x), list(y)
+2011-03-07T03:48:16  <sigh> clearest
+2011-03-07T03:48:20  <antimatroid> that wont help me :P
+2011-03-07T03:48:36  <antimatroid> i need to convert a list of lists into a list of tuples, not too bad
+2011-03-07T03:48:43  <antimatroid> then sort should just work for me
+2011-03-07T03:48:57  <sigh> map(tuple, x)
+2011-03-07T03:48:58  <McLeopold> [tuple(x) for x in list]
+2011-03-07T03:49:06  <sigh> I win
+2011-03-07T03:50:15  <McLeopold> not in python 3 :)
+2011-03-07T03:50:36  <sigh> oh, what does python 3 do?
+2011-03-07T03:51:00  <McLeopold> list(map(tuple, x))
+2011-03-07T03:51:10  <McLeopold> but yeah, i forget about map and zip all the time
+2011-03-07T03:51:36  <McLeopold> python 3 is lazy and give you an iterator
+2011-03-07T03:51:42  <sigh> fair enough
+2011-03-07T03:51:55  <sigh> map is fun but crappy lambdas make it less useful
+2011-03-07T03:53:13  <McLeopold> no lambda in p3k
+2011-03-07T03:54:04  <McLeopold> dammit, they added back in, wrong again
+2011-03-07T03:54:54  <sigh> haha, I was hunting docs to verify that :P
+2011-03-07T04:00:01  <antimatroid> now python is just trolling me :\
+2011-03-07T04:00:16  <antimatroid> i get the same logic response as sigh with a simple if, but if i sort by the tuples, same result :\
+2011-03-07T04:00:35  <antimatroid> me thinks python sort isn't just using <?
+2011-03-07T04:00:49  <sigh> it is
+2011-03-07T04:00:59  <antimatroid> then that makes no sense :s
+2011-03-07T04:01:04  <sigh> paste code
+2011-03-07T04:01:27  <sigh> preferably a minimal case that demonstrates the problem
+2011-03-07T04:01:49  <antimatroid> bleh, have to reset internet
+2011-03-07T04:02:34  <McLeopold> I didn't know he was in control of the whole internet...
+2011-03-07T04:03:41  *** antimatroid1 <antimatroid1!~Nick@2.115-27-211.dynamic.dsl.mel.iprimus.net.au> has joined #aichallenge
+2011-03-07T04:03:52  <sigh> the internet is back!
+2011-03-07T04:06:11  *** antimatroid <antimatroid!~Nick@97.068.dsl.mel.iprimus.net.au> has quit IRC (Ping timeout: 248 seconds)
+2011-03-07T04:06:42  <antimatroid1> well this is annoying
+2011-03-07T04:07:15  <antimatroid1> i can't replicate it sorting the way it does with the analyzer with a simple test case :\\
+2011-03-07T04:08:27  <antimatroid1> got it
+2011-03-07T04:09:45  <sigh> is it this: 0 < [0] < (0,)
+2011-03-07T04:10:11  <antimatroid1> yeah i think
+2011-03-07T04:10:56  <sigh> not sure how you've got lists and tuples mixed up in the same context, but good luck!
+2011-03-07T04:12:38  <antimatroid1> http://codepad.org/vaq3GmXR - analyzer.py
+2011-03-07T04:12:39  <antimatroid1> http://codepad.org/8dpwJaCs - amap.py
+2011-03-07T04:12:43  <antimatroid1> that's the mess i'm dealing with :P
+2011-03-07T04:13:51  <antimatroid1> i seriously need someone that knows python to write the "space" output part :P
+2011-03-07T04:14:49  <antimatroid1> amap.map***
+2011-03-07T04:15:45  <antimatroid1> sigh: did i mention i've made my symmetric maps ensure now that no two players ever start in the same row or column? :P
+2011-03-07T04:15:53  <antimatroid1> and i cant start everyone outside vision if necessary
+2011-03-07T04:16:09  <antimatroid1> and i can do any number of players in a reasonable size
+2011-03-07T04:16:10  <sigh> cool
+2011-03-07T04:16:13  <antimatroid1> well, within reason
+2011-03-07T04:16:34  <sigh> so the space output part, what needs to change?
+2011-03-07T04:16:44  <antimatroid1> the code is awful?
+2011-03-07T04:17:09  <antimatroid1> 131 is the line where i'm trying to sort my information
+2011-03-07T04:17:25  <sigh> so it works?
+2011-03-07T04:18:03  <antimatroid1> you can run that code with the given map and it should run fine
+2011-03-07T04:18:09  <antimatroid1> it just wont sort properly
+2011-03-07T04:18:15  <antimatroid1> "properly"*
+2011-03-07T04:18:22  <antimatroid1> i'm sure whatever it's doing is considered proper
+2011-03-07T04:18:42  <sigh> I'll play around with it
+2011-03-07T04:19:07  <antimatroid1> :) cheers
+2011-03-07T04:19:27  <antimatroid1> feel free to uncomment the partion part and play around with the maps for cool pictures :P
+2011-03-07T04:20:00  *** McLeopold <McLeopold!~Scott@c-98-247-248-39.hsd1.wa.comcast.net> has left #aichallenge
+2011-03-07T04:20:04  <antimatroid1> i might change the print '.' line to print len(accessMap[row][col][1]) so it gives you more info
+2011-03-07T04:26:25  <antimatroid1> lol, check this example map
+2011-03-07T04:26:58  <antimatroid1> http://codepad.org/PxNQKauD
+2011-03-07T04:27:23  <antimatroid1> 12 people are at an equal distance to one square
+2011-03-07T04:39:27  <antimatroid1> it would be cool if SOME of the maps required cooperating with your close enemy(s) in order to not just kill each other right away
+2011-03-07T04:45:16  <sigh> antimatroid1: I made the space output shorter: http://codepad.org/0SDBxlFR
+2011-03-07T04:45:43  <sigh> although I have no idea why you require what is formatted as a dictionary to be ordered
+2011-03-07T04:47:08  *** iFire <iFire!~kittens@unaffiliated/ifire> has quit IRC (Ping timeout: 264 seconds)
+2011-03-07T04:48:43  *** iFire <iFire!~kittens@unaffiliated/ifire> has joined #aichallenge
+2011-03-07T04:50:13  *** kaemo <kaemo!~mad5ci@d61-117.icpnet.pl> has joined #aichallenge
+2011-03-07T04:51:36  <antimatroid1> sigh: you think i could just leave it unordered?
+2011-03-07T04:51:40  <antimatroid1> i should ask mcleopold
+2011-03-07T04:51:44  <antimatroid1> that'd make my life much easier
+2011-03-07T04:51:59  <sigh> antimatroid1: more that the semantics of a dictionary imply unordered
+2011-03-07T04:52:02  <antimatroid1> sigh: did you look at the case where 12 players are at an equal distance?
+2011-03-07T04:52:21  <sigh> yup
+2011-03-07T04:52:30  <antimatroid1> http://codepad.org/frlP3LrS
+2011-03-07T04:52:42  <antimatroid1> i suspect you could make it work for arbitrary numbers of players given enough room
+2011-03-07T04:52:53  <antimatroid1> it would be fun to make such maps with a single food square right in the middle :D
+2011-03-07T04:53:08  <sigh> -)
+2011-03-07T04:53:09  <sigh> :)
+2011-03-07T04:54:57  <antimatroid1> while the equilibrium would be a draw, the actual better position would be on the row near the center
+2011-03-07T04:55:42  <antimatroid1> oh man
+2011-03-07T04:55:58  <antimatroid1> i wonder if i could construct repeated rock paper scissors with those maps
+2011-03-07T05:00:25  <antimatroid1> don't think rps would work, but some kind of game would
+2011-03-07T05:01:28  <sigh> antimatroid1: here you go, fixed your ordering problems and made the code a lot shorted and easier to read: http://codepad.org/qv9Wlcv6
+2011-03-07T05:06:17  <antimatroid1> sigh: cheers :)
+2011-03-07T05:26:56  <antimatroid1> have any of you seen modern family?
+2011-03-07T05:27:05  <antimatroid1> i started watching it a few days ago, it's surprisingly funny
+2011-03-07T05:33:39  <sigh> nah, I haven't much of any tv recently
+2011-03-07T05:42:17  *** iFire <iFire!~kittens@unaffiliated/ifire> has quit IRC (Read error: Connection reset by peer)
+2011-03-07T05:42:41  *** iFire <iFire!~kittens@unaffiliated/ifire> has joined #aichallenge
+2011-03-07T06:25:32  *** kaemo <kaemo!~mad5ci@d61-117.icpnet.pl> has quit IRC (Ping timeout: 240 seconds)
+2011-03-07T06:29:22  *** javagamer <javagamer!~javagamer@ool-4356dfec.dyn.optonline.net> has joined #aichallenge
+2011-03-07T06:58:33  *** chris__0076 <chris__0076!~Chris_007@adsl-190-128-100.asm.bellsouth.net> has joined #aichallenge
+2011-03-07T07:01:08  *** chris___0076 <chris___0076!~Chris_007@adsl-190-53-206.asm.bellsouth.net> has quit IRC (Ping timeout: 246 seconds)
+2011-03-07T07:29:40  *** kaemo <kaemo!~mad5ci@150.254.83.77> has joined #aichallenge
+2011-03-07T07:53:53  *** sente <sente!~stu@ip-208-118-225-99.twdx.net> has joined #aichallenge
+2011-03-07T08:15:31  *** boegel <boegel!~boegel@91.182.104.108> has quit IRC (Quit: Leaving)
+2011-03-07T08:16:46  *** boegel <boegel!~boegel@91.182.104.108> has joined #aichallenge
+2011-03-07T08:18:06  *** sigh <sigh!~sigh@145.115-50-210.dynamic.dsl.mel.iprimus.net.au> has quit IRC (Remote host closed the connection)
+2011-03-07T08:36:27  *** Mathnerd314 <Mathnerd314!~mathnerd3@dsl.6.28.53.206.cos.dyn.pcisys.net> has quit IRC (Ping timeout: 276 seconds)
+2011-03-07T08:50:01  *** delt0r_ <delt0r_!~delt0r@188-22-173-240.adsl.highway.telekom.at> has joined #aichallenge
+2011-03-07T08:51:24  *** delt0r___ <delt0r___!~delt0r@188-22-166-131.adsl.highway.telekom.at> has quit IRC (Ping timeout: 246 seconds)
+2011-03-07T08:53:22  *** iFire <iFire!~kittens@unaffiliated/ifire> has quit IRC (Read error: Connection reset by peer)
+2011-03-07T08:53:42  *** kaemo <kaemo!~mad5ci@150.254.83.77> has quit IRC (Ping timeout: 248 seconds)
+2011-03-07T08:54:51  *** iFire <iFire!~kittens@unaffiliated/ifire> has joined #aichallenge
+2011-03-07T09:02:40  *** iFire <iFire!~kittens@unaffiliated/ifire> has quit IRC (Read error: Connection reset by peer)
+2011-03-07T09:02:57  *** iFire <iFire!~kittens@unaffiliated/ifire> has joined #aichallenge
+2011-03-07T09:07:40  *** iFire <iFire!~kittens@unaffiliated/ifire> has joined #aichallenge
+2011-03-07T09:13:33  *** amstan <amstan!~amstan@69-165-150-184.dsl.teksavvy.com> has joined #aichallenge
+2011-03-07T09:13:33  *** ChanServ sets mode: +o amstan
+2011-03-07T09:23:37  *** mceier <mceier!~mceier@89-77-208-118.dynamic.chello.pl> has joined #aichallenge
+2011-03-07T09:24:41  *** amstan <amstan!~amstan@69-165-150-184.dsl.teksavvy.com> has quit IRC (Ping timeout: 240 seconds)
+2011-03-07T10:45:54  *** smellyhippy <smellyhippy!~asmodean@about/csharp/regular/smellyhippy> has quit IRC (Quit: Take your stinking clause off me you damn dirty predicate!)
+2011-03-07T10:46:25  *** smellyhippy <smellyhippy!~asmodean@cust240-dsl50.idnet.net> has joined #aichallenge
+2011-03-07T10:46:26  *** smellyhippy <smellyhippy!~asmodean@about/csharp/regular/smellyhippy> has joined #aichallenge
+2011-03-07T10:59:48  *** mega1 <mega1!~user@catv4E5C915D.pool.t-online.hu> has joined #aichallenge
+2011-03-07T11:10:49  *** superflit <superflit!~superflit@140.226.49.148> has joined #aichallenge
+2011-03-07T12:08:01  *** Cyndre__ is now known as Cyndre
+2011-03-07T12:09:24  *** amstan_ <amstan_!~alex@142.222.24.72> has joined #aichallenge
+2011-03-07T12:09:24  *** ChanServ sets mode: +o amstan_
+2011-03-07T12:10:47  *** McLeopold <McLeopold!~Scott@barracuda.imagesourceinc.com> has joined #aichallenge
+2011-03-07T12:10:59  <McLeopold> @seen j3camero
+2011-03-07T12:10:59  <contestbot> McLeopold: j3camero was last seen in #aichallenge 5 days, 12 hours, 16 minutes, and 59 seconds ago: <j3camero> McLeopold: do you have a magic main-server-setup script, or did you manually do a bunch of stuff to create a test server?
+2011-03-07T12:15:05  *** amstan_ <amstan_!~alex@142.222.24.72> has quit IRC (Ping timeout: 255 seconds)
+2011-03-07T12:15:44  <McLeopold> @later tell antimatroid: no, I don't care about order.  I would just do a sum(count for players, count in stats['space'].items() where player in players).  And then sigh would improve it.
+2011-03-07T12:15:45  <contestbot> McLeopold: I come to serve.
+2011-03-07T12:18:41  <antimatroid1> i'm here :P
+2011-03-07T12:19:05  <antimatroid1> it's sorted now anyway thanks to sigh
+2011-03-07T12:19:11  <janzert> was about to say that it looks like you misunderstand and are printing the output
+2011-03-07T12:19:19  <antimatroid1> i went to sleep early before, i'll add in ant counts in a minute then i think it's done
+2011-03-07T12:19:42  <antimatroid1> janzert: i am printint it, what am i meant to be doing?
+2011-03-07T12:19:52  <janzert> all you need to do is place it in an actual python dict and return it
+2011-03-07T12:20:11  <antimatroid1> ah, okay, i have no idea what they are, i'll go look them up
+2011-03-07T12:20:17  <antimatroid1> (i don't know python :P)
+2011-03-07T12:20:18  <janzert> just sec I'll try and edit it on codepad
+2011-03-07T12:20:41  <antimatroid1> have you got the link sigh gave me?
+2011-03-07T12:20:44  <antimatroid1> i haven't edited that yet
+2011-03-07T12:24:35  <janzert> something like this http://codepad.org/5ja5Smwt
+2011-03-07T12:25:22  <janzert> also if your editor can do it all the tabs should be expanded into 4 spaces
+2011-03-07T12:26:39  <janzert> also just noticed landAccessPlayers should have tuples for all the keys, just change line 126 to
+2011-03-07T12:26:59  <janzert> landAccessPlayers[tuple(t[0])] += 1
+2011-03-07T12:27:23  <janzert> or actually just get rid of the if/elif all together
+2011-03-07T12:28:18  <antimatroid1> so t[0] isn't needed?
+2011-03-07T12:28:23  <antimatroid1> cheers for that
+2011-03-07T12:28:44  <janzert> t is a list right?
+2011-03-07T12:28:52  <McLeopold> oh hi
+2011-03-07T12:29:20  <antimatroid1> hmm, let me work this out, sigh did that
+2011-03-07T12:30:07  <janzert> the whole thing from 120 to 126 could be changed into a list comprehension
+2011-03-07T12:30:13  <antimatroid1> what happened to my accessCounts :\
+2011-03-07T12:30:30  <antimatroid1> is that all just in the landAccessPlayers?
+2011-03-07T12:31:06  <McLeopold> also, python isn't java, don't use fake reverse Hungarian notatioin
+2011-03-07T12:31:09  <janzert> yes, it looks like
+2011-03-07T12:31:27  <antimatroid1> McLeopold: what do you mean?
+2011-03-07T12:32:17  <McLeopold> Uppercasing all words except for the first one.  but I'm not totally serious
+2011-03-07T12:32:46  <janzert> btw, I was wrong about changing to a list comprehension above
+2011-03-07T12:33:38  <McLeopold> antimatroid1: it's in pep8, don't use mixed case for new development
+2011-03-07T12:34:27  <antimatroid1> that's just what i tend to use for my own programs, do you want _'s?
+2011-03-07T12:34:40  <antimatroid1> i don't mind changing that, i'm very indifferent about my variable naming convention
+2011-03-07T12:34:47  <McLeopold> if you want to be a serious python programmer, then yes
+2011-03-07T12:35:02  <antimatroid1> ^^ I don't, I hate python :P
+2011-03-07T12:35:03  <McLeopold> I totally doesn't matter.
+2011-03-07T12:35:18  <McLeopold> But read through pep8 and try an use good style.
+2011-03-07T12:35:35  <McLeopold> I bet there's a script out there to fix it.
+2011-03-07T12:35:54  <janzert> https://github.com/aichallenge/aichallenge/wiki/Python-Style-Guide
+2011-03-07T12:35:56  <antimatroid1> i shall, i am slowly picking it up for the sake of my programs here not being as awful
+2011-03-07T12:36:18  <janzert> which has links to pep8 and google python style guide
+2011-03-07T12:36:42  <janzert> from what I can tell the google style guide is a superset of pep 8
+2011-03-07T12:37:16  <McLeopold> the only thing that really gets me is the 80 character limit
+2011-03-07T12:37:31  <McLeopold> I'm constantly going over a feel like I'm making my code less readable.
+2011-03-07T12:38:29  <janzert> I go over around every few hundred lines
+2011-03-07T12:39:02  <janzert> usually when I start going over I use it as an indicator that I need to factor out a separate function or break a single statement up
+2011-03-07T12:39:22  <McLeopold> because your indent starts to far over?
+2011-03-07T12:39:24  <janzert> or just use python's excellent line continuations to make it more readable :)
+2011-03-07T12:39:37  <janzert> if that's what's causing it yes
+2011-03-07T12:40:08  <McLeopold> how much time do I have left?
+2011-03-07T12:40:47  <janzert> 7 hours?
+2011-03-07T12:40:48  <janzert> :)
+2011-03-07T12:41:10  <janzert> lunch time, be back in a while
+2011-03-07T12:45:15  *** davidjliu <davidjliu!473a6d0e@gateway/web/freenode/ip.71.58.109.14> has joined #aichallenge
+2011-03-07T13:01:37  <antimatroid1> McLeopold: i think it's done :)
+2011-03-07T13:02:18  <antimatroid1> http://codepad.org/bK4DAQYH
+2011-03-07T13:06:04  <antimatroid1> McLeopold: Oh, look at this http://codepad.org/PxNQKauD
+2011-03-07T13:06:24  <antimatroid1> there is a square there that 12 people can reach in the same time
+2011-03-07T13:06:48  <McLeopold> nice
+2011-03-07T13:07:00  <antimatroid1> you can make that arbitrarily large
+2011-03-07T13:07:01  <McLeopold> still it on git hub in manager
+2011-03-07T13:08:22  <antimatroid1> the count stuff is sorted nicely in the end anyway :)
+2011-03-07T13:08:32  <antimatroid1> it requires that if, elif part janzert said to get rid of
+2011-03-07T13:08:37  <antimatroid1> otherwise you get a different ordering
+2011-03-07T13:10:39  <antimatroid1> McLeopold: do you want me to make a manager directory inside the ants folder?
+2011-03-07T13:10:58  <antimatroid1> or just map_analyzer.py in ants?
+2011-03-07T13:12:02  <antimatroid1> oh, nevermind
+2011-03-07T13:12:44  <janzert> antimatroid1: dictionaries are unordered
+2011-03-07T13:13:30  <janzert> the reason I was saying to get rid of the if / elif is that McLeopold wanted all them as tuples of players
+2011-03-07T13:13:43  <janzert> even if there is just one player
+2011-03-07T13:13:48  <janzert> just for consistency
+2011-03-07T13:14:55  <CIA-89> aichallenge: antimatroid epsilon * r22ae873 / manager/map_analyzer.py : added a map analyzer - http://bit.ly/eqrn8q
+2011-03-07T13:15:07  <antimatroid1> janzert: ah crap, i just pushed it :P
+2011-03-07T13:15:12  <janzert> that's ok
+2011-03-07T13:15:20  <janzert> it can be changed later
+2011-03-07T13:15:31  <antimatroid1> it needs to check if len(.) >= 1 still though
+2011-03-07T13:15:42  <antimatroid1> otherwise you get the wall squares added in there which makes no sense
+2011-03-07T13:15:50  <antimatroid1> water*
+2011-03-07T13:15:52  <janzert> ahh
+2011-03-07T13:19:02  *** amstan_ <amstan_!~alex@142.222.16.35> has joined #aichallenge
+2011-03-07T13:19:03  *** ChanServ sets mode: +o amstan_
+2011-03-07T13:20:27  <antimatroid1> will python bit me for ]]?
+2011-03-07T13:20:31  <antimatroid1> bite*
+2011-03-07T13:21:43  *** smellyhippy <smellyhippy!~asmodean@about/csharp/regular/smellyhippy> has quit IRC (Ping timeout: 246 seconds)
+2011-03-07T13:23:09  <janzert> not if you're ending a list within a list
+2011-03-07T13:25:17  <antimatroid1> what about indexing a list from a list index?
+2011-03-07T13:25:34  <antimatroid1> from a list element**
+2011-03-07T13:26:34  <antimatroid1> hmm, seems fine, cool
+2011-03-07T13:27:03  <janzert> so a_list[b_list[2]]
+2011-03-07T13:27:06  <janzert> yes that's fine
+2011-03-07T13:29:02  <antimatroid1> c++ hates that, and >> for pairs,vectors, etc.
+2011-03-07T13:29:14  <antimatroid1> well, >>
+2011-03-07T13:29:27  <antimatroid1> hmm :P
+2011-03-07T13:29:31  <antimatroid1> i think it's bedtime again
+2011-03-07T13:31:06  <janzert> yeah, well c++... :P
+2011-03-07T13:32:11  <janzert> see you later
+2011-03-07T13:32:39  <antimatroid1> i say i'm going to bed, but really i'm stopping progrmming and reading reddit d:
+2011-03-07T13:33:22  <janzert> ahh yes, I need to remember; antimatroid "bedtime" -> "time to read reddit" :)
+2011-03-07T13:36:50  *** smellyhippy <smellyhippy!~asmodean@about/csharp/regular/smellyhippy> has joined #aichallenge
+2011-03-07T13:41:27  *** me0w <me0w!~me0w@197.200.78.99> has joined #aichallenge
+2011-03-07T13:46:41  *** amstan_ <amstan_!~alex@142.222.16.35> has quit IRC (Ping timeout: 260 seconds)
+2011-03-07T13:49:36  *** me0w <me0w!~me0w@197.200.78.99> has quit IRC (Ping timeout: 260 seconds)
+2011-03-07T13:56:40  *** helo_ <helo_!46593219@gateway/web/freenode/ip.70.89.50.25> has joined #aichallenge
+2011-03-07T14:00:02  *** kaemo <kaemo!~mad5ci@d61-117.icpnet.pl> has joined #aichallenge
+2011-03-07T14:34:41  *** helo_ <helo_!46593219@gateway/web/freenode/ip.70.89.50.25> has quit IRC (Ping timeout: 245 seconds)
+2011-03-07T14:40:38  *** boegel <boegel!~boegel@91.182.104.108> has quit IRC (Quit: Leaving)
+2011-03-07T14:55:00  *** lavalamp <lavalamp!4507d76a@gateway/web/freenode/ip.69.7.215.106> has joined #aichallenge
+2011-03-07T14:56:14  *** closedbracket <closedbracket!~closedbra@fsimihaiSSD.uncc.edu> has joined #aichallenge
+2011-03-07T14:59:16  *** chris___0076 <chris___0076!~Chris_007@adsl-190-127-92.asm.bellsouth.net> has joined #aichallenge
+2011-03-07T15:02:06  *** chris__0076 <chris__0076!~Chris_007@adsl-190-128-100.asm.bellsouth.net> has quit IRC (Ping timeout: 246 seconds)
+2011-03-07T15:06:20  *** chris__0076 <chris__0076!~Chris_007@adsl-190-51-155.asm.bellsouth.net> has joined #aichallenge
+2011-03-07T15:08:58  *** Accoun <Accoun!~1@static-213-88-2-78.chebnet.ru> has quit IRC ()
+2011-03-07T15:09:06  *** chris___0076 <chris___0076!~Chris_007@adsl-190-127-92.asm.bellsouth.net> has quit IRC (Ping timeout: 246 seconds)
+2011-03-07T15:19:45  <McLeopold> janzert: it appears submissions where stored on the server uncompressed, then compressed when the worker requested it
+2011-03-07T15:20:25  <janzert> yes
+2011-03-07T15:20:53  *** Accoun <Accoun!~1@static-213-88-2-78.chebnet.ru> has joined #aichallenge
+2011-03-07T15:21:10  <janzert> with compilation all done on the workers though the main server should be able to just always hand out the original submission file
+2011-03-07T15:22:31  <McLeopold> yep
+2011-03-07T15:22:53  <McLeopold> but still test the unzip to get to status 20?
+2011-03-07T15:22:57  <McLeopold> or not
+2011-03-07T15:23:10  <janzert> I think skip that
+2011-03-07T15:23:25  <janzert> it doesn't seem like it adds much value
+2011-03-07T15:24:18  <janzert> the worker can always report back that it's invalid
+2011-03-07T15:31:58  *** amstan <amstan!~amstan@69-165-150-184.dsl.teksavvy.com> has joined #aichallenge
+2011-03-07T15:31:58  *** ChanServ sets mode: +o amstan
+2011-03-07T15:32:21  <McLeopold> actually, it looks like the get_submission zipped up the zip file
+2011-03-07T15:38:01  <janzert> it sent everything that was in the submission's directory I believe? including the original submission file yes
+2011-03-07T15:40:04  <amstan> what's going on?
+2011-03-07T15:41:00  <McLeopold> I see, I'm not running compile_daemon, so it was never unzipped.
+2011-03-07T15:43:44  <McLeopold> the compile daemon unzipped and cleaned stuff up, I'm thinking it should be an unzip daemon now.
+2011-03-07T15:44:07  <McLeopold> Also, can the workers send emails?
+2011-03-07T15:44:33  <janzert> yes, I'm hoping they can send the success/rejection emails
+2011-03-07T15:45:15  <janzert> amazon just introduced an email sending service
+2011-03-07T15:46:05  <McLeopold> janzert: after unpacking, the original zip was kept around
+2011-03-07T15:46:12  <janzert> right
+2011-03-07T15:46:41  <McLeopold> so, I'm thinking, the server will unzip, clean and make a separate tarball for the workers
+2011-03-07T15:47:06  <janzert> ok. clean in what way?
+2011-03-07T15:47:38  <janzert> I believe we have to keep all the files in case they are data files the bot depends on
+2011-03-07T15:47:40  <McLeopold> whatever unpack does in the compile daemon
+2011-03-07T15:48:00  <McLeopold> it did a clean because we included tools in the starter packs
+2011-03-07T15:48:25  <janzert> ahh, yeah I do kind of remember that now
+2011-03-07T15:48:32  <McLeopold> if we change that, we don't need to clean
+2011-03-07T15:48:43  <McLeopold> but it would be nice if everything was a tgz
+2011-03-07T15:49:08  <janzert> yeah, it does seem rather nice
+2011-03-07T15:49:40  <janzert> but on the other hand if we don't nothing on main server ever needs to touch submissions directly
+2011-03-07T15:50:02  <janzert> hmm, I guess I'm happy either way
+2011-03-07T15:51:25  <McLeopold> I just need to make sure I send the right headers for the worker download.
+2011-03-07T15:52:02  <McLeopold> tgz is tar.gz?
+2011-03-07T15:52:06  <janzert> yes
+2011-03-07T15:52:11  <McLeopold> ok
+2011-03-07T15:52:25  <amstan> McLeopold: can you review this? https://github.com/aichallenge/aichallenge/issues#issue/18
+2011-03-07T15:55:07  <McLeopold> amstan: I'll get to it later today.
+2011-03-07T15:57:19  *** iFire` <iFire`!~kittens@unaffiliated/ifire> has joined #aichallenge
+2011-03-07T16:01:06  *** iFire <iFire!~kittens@unaffiliated/ifire> has quit IRC (Ping timeout: 276 seconds)
+2011-03-07T16:01:26  <amstan> lavalamp: umm.. are you aware that you're cherry picking commits from multiple branches at the same time?
+2011-03-07T16:01:36  <amstan> lavalamp: they're not merged they, they shouldn't be together
+2011-03-07T16:01:53  <lavalamp> I just realized that I somehow screwed up my fork actually
+2011-03-07T16:02:12  <lavalamp> I don't know what went wrong, I thought I just pulled some stuff down from the main repository
+2011-03-07T16:02:15  <amstan> lavalamp: hold on, i might have a fix
+2011-03-07T16:02:32  <lavalamp> I was just about to ask in here what I should do to fix it, lol
+2011-03-07T16:02:43  <amstan> lavalamp: this is the only commit that you did, right? https://github.com/lavalamp/aichallenge/commit/46d2cdd2f1ac66973d789629235a0b4a72c0cc10
+2011-03-07T16:03:15  <lavalamp> I did three or four :/
+2011-03-07T16:03:17  <lavalamp> https://github.com/lavalamp/aichallenge/commit/9df9a96f30cad00cf277486d70227715fda5399b
+2011-03-07T16:03:33  <lavalamp> Is another one.
+2011-03-07T16:03:43  <lavalamp> They are interspersed, unfortunately.
+2011-03-07T16:03:53  <lavalamp> Should I just delete my fork and recreate it?
+2011-03-07T16:04:38  <amstan> lavalamp: hmm.. that could work.. but don't delete the local one yet
+2011-03-07T16:05:17  <lavalamp> I discovered there was a problem when looking at the pull request interface... that and the fact that I wanted to add some documentation is why I haven't made a pull request yet...
+2011-03-07T16:05:40  <amstan> yeah, np, it happens to all of us
+2011-03-07T16:05:53  <lavalamp> ok I won't be able to do anything about this until tonight or tomorrow unfortunately
+2011-03-07T16:06:22  <lavalamp> yeah I've never gone through a fork/pull request cycle on github before...
+2011-03-07T16:07:50  <lavalamp> On the plus side the debugging .png images the go starter pack can now make are pretty cool :)
+2011-03-07T16:08:12  <amstan> lavalamp: well.. ping me when you can do this, i can guide you through it
+2011-03-07T16:08:24  <lavalamp> amstan: ok, will do, thanks
+2011-03-07T16:08:58  <McLeopold> janzert: if we don't unpack, how should we calc the hash?
+2011-03-07T16:09:28  <janzert> just use the hash of the submission file (on both sides of course)
+2011-03-07T16:10:33  <janzert> it's just a double check that the worker actually ended up with the same thing the main server has
+2011-03-07T16:13:46  <McLeopold> how would you hash the file in python?
+2011-03-07T16:14:56  <amstan> McLeopold: how big? how often?
+2011-03-07T16:15:20  <janzert> see submission_hash.py
+2011-03-07T16:16:10  <janzert> specifically the function hash_file_sha takes a filename and returns the sha hash
+2011-03-07T16:18:20  <janzert> although that also includes the filename in the hash which probably isn't needed or maybe even wanted for how you're using it
+2011-03-07T16:19:47  <janzert> btw, if you decide to do any speed testing on this be sure to clear your filesystem caches prior to each test
+2011-03-07T16:33:55  <McLeopold> janzert: can you  make the worker setup pull the submission_hash.py file from the manager dir?  That way we don't maintain 2 copies.  Or some github magic.
+2011-03-07T16:34:52  <janzert> yeah, I was wondering what to do about that sort of thing in passing the other day
+2011-03-07T16:37:14  <janzert> I think the cleanest thing would be to make a separate python package for all the common code to live in
+2011-03-07T16:37:48  <janzert> but I'm not really enthused about that either
+2011-03-07T16:46:04  *** Palmik <Palmik!~Palmik@palmikpc.sks6.muni.cz> has quit IRC (Remote host closed the connection)
+2011-03-07T16:50:39  *** delt0r___ <delt0r___!~delt0r@188-22-170-75.adsl.highway.telekom.at> has joined #aichallenge
+2011-03-07T16:52:01  *** delt0r_ <delt0r_!~delt0r@188-22-173-240.adsl.highway.telekom.at> has quit IRC (Ping timeout: 246 seconds)
+2011-03-07T17:05:49  *** sigh <sigh!~sigh@lithium.mailguard.com.au> has joined #aichallenge
+2011-03-07T17:11:13  <McLeopold> http://www.not-equal.eu/myrmedrome/main_en.html
+2011-03-07T17:11:31  *** amstan <amstan!~amstan@69-165-150-184.dsl.teksavvy.com> has quit IRC (*.net *.split)
+2011-03-07T17:11:32  *** Ttech <Ttech!ttech@botters/staff/ttech> has quit IRC (*.net *.split)
+2011-03-07T17:11:32  *** sente <sente!~stu@ip-208-118-225-99.twdx.net> has quit IRC (*.net *.split)
+2011-03-07T17:11:32  *** greghaynes <greghaynes!~irc@174.136.108.178> has quit IRC (*.net *.split)
+2011-03-07T17:11:48  *** amstan <amstan!~amstan@69-165-150-184.dsl.teksavvy.com> has joined #aichallenge
+2011-03-07T17:11:48  *** ChanServ sets mode: +o amstan
+2011-03-07T17:12:26  *** mega1 <mega1!~user@catv4E5C915D.pool.t-online.hu> has quit IRC (Ping timeout: 248 seconds)
+2011-03-07T17:23:07  <amstan> anyone good at regex? i'm having some problems with this: http://pastebin.com/VLn93YXD
+2011-03-07T17:23:30  *** Ttech <Ttech!ttech@botters/staff/ttech> has joined #aichallenge
+2011-03-07T17:24:17  *** Mathnerd314 <Mathnerd314!~mathnerd3@dsl.6.28.53.206.cos.dyn.pcisys.net> has joined #aichallenge
+2011-03-07T17:25:04  <McLeopold> amstan: I'll take a look
+2011-03-07T17:25:23  <amstan> well.. i got some help from #regex, it's all good now:
+2011-03-07T17:25:30  <amstan> >>> re.split(r"<([^>]+)>",a)
+2011-03-07T17:25:31  <amstan> ['[16:37] ', 'janzert', " but I'm not really enthused about that either"]
+2011-03-07T17:29:47  *** sigh <sigh!~sigh@lithium.mailguard.com.au> has quit IRC (Read error: Connection reset by peer)
+2011-03-07T17:31:47  *** sigh <sigh!~sigh@lithium.mailguard.com.au> has joined #aichallenge
+2011-03-07T17:38:58  <amstan> McLeopold: so.. i got this now: http://pastebin.com/EGwtMmtt
+2011-03-07T17:40:46  *** lavalamp <lavalamp!4507d76a@gateway/web/freenode/ip.69.7.215.106> has quit IRC (Quit: Page closed)
+2011-03-07T17:46:06  *** CIA-89 <CIA-89!~CIA@208.69.182.149> has quit IRC ()
+2011-03-07T17:53:28  <janzert> what is the goal?
+2011-03-07T17:56:11  *** CIA-33 <CIA-33!~CIA@208.69.182.149> has joined #aichallenge
+2011-03-07T17:56:15  <McLeopold> amstan: where's our cia?  I don't see my push?
+2011-03-07T17:56:25  <amstan> janzert: to split something like this: 2011-03-06T00:07:00  <janzert> McLeopold: the only constraint there that encourages it from what I see is the no repeat matches one
+2011-03-07T17:56:36  <amstan> janzert: into date, nick and msg
+2011-03-07T17:56:52  <McLeopold> in python?
+2011-03-07T17:56:54  <amstan> ideally with some validation, but not too strict on the date, the date should just go until it hits a space char
+2011-03-07T17:56:56  <janzert> I'd skip regex altogether
+2011-03-07T17:57:00  <McLeopold> yeah
+2011-03-07T17:57:18  <amstan> ideally something like this: http://pastebin.com/nJX5X5TT
+2011-03-07T17:57:29  <amstan> that's how i'll use it
+2011-03-07T17:57:33  <amstan> but mine doesn't work yet
+2011-03-07T17:58:17  <McLeopold> str.split(' ', 2)
+2011-03-07T17:58:44  <amstan> McLeopold: i need it not to match lines like: 2011-03-06T16:46:55  *** McLeopold <McLeopold!~Scott@c-98-247-248-39.hsd1.wa.comcast.net> has left #aichallenge
+2011-03-07T17:58:47  <amstan> and it has to be fast
+2011-03-07T17:59:01  <janzert> str.split should be plenty fast
+2011-03-07T17:59:15  <amstan> ok..
+2011-03-07T17:59:29  <janzert> I would be a bit surprised if it's slower than a regex
+2011-03-07T17:59:56  <janzert> basically just need "date, name, msg = line.split(None, 2)"
+2011-03-07T18:00:11  <janzert> then you'll need to strip the <>'s off the name
+2011-03-07T18:00:11  *** amstan is now known as amstan2
