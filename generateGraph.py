@@ -39,7 +39,8 @@ def parseLog(reader):
 			linetype = MSG
 			nick = nick[1:-1]
 		
-		nick=nick.rstrip("_")
+		nick=toLower(nick.rstrip("_"))
+		msg=toLower(msg)
 		nicks.add(nick)
 		log.append([linetype,date,nick,msg])
 		
@@ -49,7 +50,7 @@ def parseLog(reader):
 	
 	return log, nicks
 
-def generateGraph(filelist):
+def generateGraph(layout,filelist):
 	reader=LogReader(filelist)
 	
 	log, nicks = parseLog(reader)
@@ -61,7 +62,7 @@ def generateGraph(filelist):
 		graph[nick] = set()
 	
 	#Scan for highlights, then fill the graph
-	nickre = re.compile("\\b(%s)\\b" % ("|".join(re.escape(toLower(nick)) for nick in nicks)))
+	nickre = re.compile("\\b(%s)\\b" % ("|".join(re.escape(nick) for nick in nicks)))
 	try:
 		for line in log:
 			linetype, date, nick, msg = line
@@ -71,7 +72,7 @@ def generateGraph(filelist):
 			sys.stdout.flush()
 			
 			if linetype==MSG:
-				highlights=set(match.group(1) for match in nickre.finditer(toLower(msg)))
+				highlights=set(match.group(1) for match in nickre.finditer(msg))
 				graph[nick]|=highlights
 	except KeyboardInterrupt:
 		pass
@@ -84,16 +85,16 @@ def generateGraph(filelist):
 	print "Generating the graph..."
 	sys.stdout.flush()
 	
-	G = pygraphviz.AGraph()
+	G = pygraphviz.AGraph(strict=False, directed=True)
 	G.add_nodes_from(nicks)
 	
 	for nick, highlights in graph.items():
 		for highlight in highlights:
 			G.add_edge(nick,highlight)
 	
-	G.layout(prog='dot')
-	G.draw('graph.png')
+	G.layout(prog=layout)
+	G.draw('graph.jpg')
 	print "Done"
 
 if __name__ == "__main__":
-	generateGraph(sys.argv[1:])
+	generateGraph(sys.argv[1],sys.argv[2:])
