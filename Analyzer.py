@@ -3,8 +3,22 @@
 from LogReader import *
 import sys
 import re
+import string
 
 ACTION, MISC, MSG = range(3)
+
+#From supybot
+_rfc1459trans = string.maketrans(string.ascii_uppercase + r'\[]~',
+                                 string.ascii_lowercase + r'|{}^')
+def toLower(s, casemapping=None):
+	"""s => s
+	Returns the string s lowered according to IRC case rules."""
+	if casemapping is None or casemapping == 'rfc1459':
+		return s.translate(_rfc1459trans)
+	elif casemapping == 'ascii': # freenode
+		return s.lower()
+	else:
+		raise ValueError, 'Invalid casemapping: %r' % casemapping
 
 def parseLog(reader):
 	
@@ -44,7 +58,7 @@ def main():
 	
 	print "Nicks: %s" % (", ".join(nicks))
 	
-	nickre = re.compile("\\b(%s)\\b" % ("|".join(re.escape(nick.lower()) for nick in nicks)))
+	nickre = re.compile("\\b(%s)\\b" % ("|".join(re.escape(toLower(nick)) for nick in nicks)))
 	
 	try:
 		for line in log:
@@ -54,7 +68,7 @@ def main():
 			sys.stdout.flush()
 			
 			if linetype==MSG:
-				highlights=set(match.group(1) for match in nickre.finditer(msg.lower()))
+				highlights=set(match.group(1) for match in nickre.finditer(toLower(msg)))
 				graph[nick]|=highlights
 	except KeyboardInterrupt:
 		print graph["amstan"]
