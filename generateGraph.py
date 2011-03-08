@@ -49,8 +49,8 @@ def parseLog(reader):
 	
 	return log, nicks
 
-def main():
-	reader=LogReader("logs/*.log")
+def generateGraph(filelist):
+	reader=LogReader(filelist)
 	
 	log, nicks = parseLog(reader)
 	print "Nicks: %s" % (", ".join(nicks))
@@ -76,6 +76,10 @@ def main():
 	except KeyboardInterrupt:
 		pass
 	
+	#Remove nicks that are not referrenced
+	activenicks = reduce(set.union,graph.values()) | set(nick for nick in nicks if len(graph[nick])>0)
+	nicks, unactivenicks = activenicks, nicks
+	
 	#Generate the graphwiz
 	print "Generating the graph..."
 	sys.stdout.flush()
@@ -87,9 +91,9 @@ def main():
 		for highlight in highlights:
 			G.add_edge(nick,highlight)
 	
-	G.layout()
+	G.layout(prog='dot')
 	G.draw('graph.png')
 	print "Done"
 
 if __name__ == "__main__":
-	main()
+	generateGraph(sys.argv[1:])

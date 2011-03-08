@@ -4,8 +4,8 @@ import os
 import glob
 
 class LogReader:
-	def __init__(self, files):
-		self.filelist=glob.glob(os.path.expanduser(files))
+	def __init__(self, filelist):
+		self.filelist=filelist
 		self.filelist.sort()
 		print "Logs to read: %s" % (self.filelist)
 	
