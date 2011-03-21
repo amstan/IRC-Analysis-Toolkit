@@ -4,6 +4,7 @@
 #2010-09-10T01:51:20  *** lava <lava!~lava-699.233.432.400.austin.res.rr.com> has quit IRC (Quit: Konversation Terminated)
 
 import string
+import sys
 
 ACTION, MISC, MSG = range(3)
 
@@ -49,7 +50,7 @@ def parseLog(reader):
 	return log, nicks
 
 if __name__ == "__main__":
-	import sys, LogReader
+	import LogReader
 	
 	reader=LogReader.LogReader(sys.argv[1:])
 	
