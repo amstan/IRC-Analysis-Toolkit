@@ -22,3 +22,7 @@ My inspiration was [piespy](http://www.jibble.org/piespy/), but I was dissapoint
 ### Examples:
  * Tested with the [#aichallenge channel logs](http://contestbot.hypertriangle.com/)
  * [Output](http://csclub.uwaterloo.ca/~amstan/%23aichallenge%20highlight%20graph/)
+ 
+
+##Frequently Asked Question Counter
+ It will print all questions asked more than once
